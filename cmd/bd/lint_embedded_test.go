@@ -71,7 +71,7 @@ func TestEmbeddedLint(t *testing.T) {
 
 	// Bug with proper template sections → no warning.
 	bugGood := bdCreate(t, bd, dir, "Bug with template", "--type", "bug",
-		"--description", "## Steps to Reproduce\n1. Do X\n2. See Y\n\n## Acceptance Criteria\nShould not crash")
+		"--description", "## Steps to Reproduce\n1. Do X\n2. See Y\n\n## Reproduction Test\nfoo_test.go::TestReproBug\n\n## Acceptance Criteria\nShould not crash")
 
 	// Task without acceptance criteria → lint warning.
 	taskBare := bdCreate(t, bd, dir, "Task without AC", "--type", "task",

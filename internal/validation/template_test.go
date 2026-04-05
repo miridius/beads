@@ -23,6 +23,9 @@ func TestValidateTemplate(t *testing.T) {
 1. Do this
 2. Do that
 
+## Reproduction Test
+internal/foo/foo_test.go::TestReproduceBug
+
 ## Acceptance Criteria
 - Bug is fixed`,
 			wantErr: false,
@@ -32,14 +35,28 @@ func TestValidateTemplate(t *testing.T) {
 			issueType:   types.TypeBug,
 			description: "This is broken",
 			wantErr:     true,
-			wantMissing: 2,
+			wantMissing: 3,
 		},
 		{
 			name:      "bug missing acceptance criteria",
 			issueType: types.TypeBug,
 			description: `## Steps to Reproduce
 1. Click button
-2. See error`,
+2. See error
+
+## Reproduction Test
+path/to/test.go::TestRepro`,
+			wantErr:     true,
+			wantMissing: 1,
+		},
+		{
+			name:      "bug missing reproduction test",
+			issueType: types.TypeBug,
+			description: `## Steps to Reproduce
+1. Click button
+
+## Acceptance Criteria
+It works`,
 			wantErr:     true,
 			wantMissing: 1,
 		},
@@ -49,6 +66,9 @@ func TestValidateTemplate(t *testing.T) {
 			description: `## steps to reproduce
 Click the button
 
+## reproduction test
+path/to/test.go
+
 ## acceptance criteria
 It works`,
 			wantErr: false,
@@ -57,6 +77,7 @@ It works`,
 			name:      "bug with inline mentions (no markdown)",
 			issueType: types.TypeBug,
 			description: `Steps to reproduce: click the button.
+Reproduction test: path/to/test.go::TestRepro
 Acceptance criteria: it should work.`,
 			wantErr: false,
 		},
@@ -140,7 +161,7 @@ Widget displays correctly`,
 			issueType:   types.TypeBug,
 			description: "",
 			wantErr:     true,
-			wantMissing: 2,
+			wantMissing: 3,
 		},
 		{
 			name:        "empty description for chore",
@@ -181,6 +202,7 @@ func TestTemplateErrorMessage(t *testing.T) {
 		IssueType: types.TypeBug,
 		Missing: []MissingSection{
 			{Heading: "## Steps to Reproduce", Hint: "Describe how to reproduce"},
+			{Heading: "## Reproduction Test", Hint: "Path to a failing test that reproduces the bug"},
 			{Heading: "## Acceptance Criteria", Hint: "Define fix criteria"},
 		},
 	}
@@ -191,6 +213,9 @@ func TestTemplateErrorMessage(t *testing.T) {
 	}
 	if !strings.Contains(msg, "Steps to Reproduce") {
 		t.Errorf("Error message should contain missing heading, got: %s", msg)
+	}
+	if !strings.Contains(msg, "Reproduction Test") {
+		t.Errorf("Error message should contain reproduction test heading, got: %s", msg)
 	}
 	if !strings.Contains(msg, "Describe how to reproduce") {
 		t.Errorf("Error message should contain hint, got: %s", msg)
@@ -222,7 +247,7 @@ func TestLintIssue(t *testing.T) {
 			name: "valid bug",
 			issue: &types.Issue{
 				IssueType:   types.TypeBug,
-				Description: "## Steps to Reproduce\nClick\n\n## Acceptance Criteria\nFixed",
+				Description: "## Steps to Reproduce\nClick\n\n## Reproduction Test\nfoo_test.go::TestRepro\n\n## Acceptance Criteria\nFixed",
 			},
 			wantErr: false,
 		},
@@ -238,7 +263,7 @@ func TestLintIssue(t *testing.T) {
 			name: "bug with acceptance in dedicated field",
 			issue: &types.Issue{
 				IssueType:          types.TypeBug,
-				Description:        "## Steps to Reproduce\nClick button",
+				Description:        "## Steps to Reproduce\nClick button\n\n## Reproduction Test\nfoo_test.go::TestRepro",
 				AcceptanceCriteria: "## Acceptance Criteria\nButton works",
 			},
 			wantErr: false,
@@ -280,7 +305,7 @@ func TestLintIssue(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "bug with plain-text acceptance field still needs steps GH#2468",
+			name: "bug with plain-text acceptance field still needs steps and reproduction test GH#2468",
 			issue: &types.Issue{
 				IssueType:          types.TypeBug,
 				Description:        "Something is broken",

@@ -32,26 +32,23 @@ func TestIsOrchestratorRoot_TrueWhenMarkersPresent(t *testing.T) {
 func TestIsOrchestratorRoot_FalseWhenMarkersMissing(t *testing.T) {
 	tests := []struct {
 		name       string
-		setupTown  bool
+		setupMayor bool
 		setupRoute bool
 	}{
-		{name: "missing both", setupTown: false, setupRoute: false},
-		{name: "missing routes", setupTown: true, setupRoute: false},
-		{name: "missing town", setupTown: false, setupRoute: true},
+		{name: "missing both", setupMayor: false, setupRoute: false},
+		{name: "missing routes", setupMayor: true, setupRoute: false},
+		{name: "missing mayor", setupMayor: false, setupRoute: true},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			root := t.TempDir()
-			if err := os.MkdirAll(filepath.Join(root, "mayor"), 0750); err != nil {
-				t.Fatal(err)
-			}
 			if err := os.MkdirAll(filepath.Join(root, ".beads"), 0750); err != nil {
 				t.Fatal(err)
 			}
 
-			if tc.setupTown {
-				if err := os.WriteFile(filepath.Join(root, "mayor", "town.json"), []byte(`{"name":"gt"}`), 0600); err != nil {
+			if tc.setupMayor {
+				if err := os.MkdirAll(filepath.Join(root, "mayor"), 0750); err != nil {
 					t.Fatal(err)
 				}
 			}

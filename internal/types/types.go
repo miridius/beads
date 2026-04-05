@@ -604,6 +604,7 @@ func (t IssueType) RequiredSections() []RequiredSection {
 	case TypeBug:
 		return []RequiredSection{
 			{Heading: "## Steps to Reproduce", Hint: "Describe how to reproduce the bug"},
+			{Heading: "## Reproduction Test", Hint: "Path to a failing test that reproduces the bug (red-green-refactor)"},
 			{Heading: "## Acceptance Criteria", Hint: "Define criteria to verify the fix"},
 		}
 	case TypeTask, TypeFeature:

@@ -28,7 +28,7 @@ var lintCmd = &cobra.Command{
 By default, lints all open issues. Specify issue IDs to lint specific issues.
 
 Section requirements by type:
-  bug:      Steps to Reproduce, Acceptance Criteria
+  bug:      Steps to Reproduce, Reproduction Test, Acceptance Criteria
   task:     Acceptance Criteria
   feature:  Acceptance Criteria
   epic:     Success Criteria

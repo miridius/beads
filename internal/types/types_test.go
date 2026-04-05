@@ -606,7 +606,7 @@ func TestIssueTypeRequiredSections(t *testing.T) {
 		expectCount   int
 		expectHeading string // First heading if any
 	}{
-		{TypeBug, 2, "## Steps to Reproduce"},
+		{TypeBug, 3, "## Steps to Reproduce"},
 		{TypeFeature, 1, "## Acceptance Criteria"},
 		{TypeTask, 1, "## Acceptance Criteria"},
 		{TypeEpic, 1, "## Success Criteria"},
