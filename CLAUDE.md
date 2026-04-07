@@ -1,49 +1,74 @@
-# Emma — Beads Crew
+# Beads (bd) - Project Instructions for AI Agents
 
-Private memory for the emma worktree/rig.
+**bd** is a distributed graph issue tracker for AI agents, powered by Dolt.
+Written in Go. CLI entry point: `cmd/bd/`.
 
-## Release Engineering
+## Build & Test
 
-Emma handles beads releases. Key lessons learned:
+```bash
+# Build
+make build                      # Builds ./bd binary (CGO required)
 
-### GitHub API Rate Limit (CRITICAL)
+# Test (preferred — uses skip list and coverage)
+make test                       # Runs ./scripts/test.sh with coverage
+make test-full-cgo              # Full CGO suite via ./scripts/test-cgo.sh
 
-The GitHub API rate limit is **5000 requests/hour**. This has been exhausted
-multiple times during releases by polling CI status. When the rate limit is
-hit, ALL crew members are blocked from GitHub API access for up to an hour.
+# Test specific packages
+go test ./internal/storage/dolt/ -v
+./scripts/test-cgo.sh ./cmd/bd/...
 
-**NEVER do any of these during a release:**
-- `gh run watch` — polls every 3 seconds (1200 req/hr per invocation)
-- Background monitors polling `gh run view` or `gh run list` in loops
-- Any automated polling of CI status at intervals less than 5 minutes
-- Running multiple concurrent API-calling processes
+# Lint
+golangci-lint run ./...         # Config: .golangci.yml
 
-**INSTEAD:**
-- After pushing a tag, `sleep` for 10-15 minutes, then check ONCE
-- Use `gh run view <run-id>` for a single status check
-- If CI is still running, sleep another 10 minutes and check again
-- Budget: 3-5 total API calls for the entire CI wait period
-- Check `gh api rate_limit` if unsure about remaining quota
+# Format
+make fmt                        # gofmt -w .
+make fmt-check                  # CI check (exits non-zero if unformatted)
+```
 
-### Release Workflow YAML
+CGO is required (Dolt backend). On macOS, ICU flags are auto-configured by
+the Makefile. Do not run raw `CGO_ENABLED=1 go test` on macOS without ICU
+flags — use `make test` or `./scripts/test-cgo.sh` instead.
 
-The release workflow (`.github/workflows/release.yml`) uses zig cross-compilation
-wrappers. Do NOT use shell heredocs (`<<'EOF'`) inside `run: |` YAML blocks —
-the heredoc content at column 0 breaks YAML literal block parsing. Use `echo`
-commands instead. This was the root cause of the v0.55.0 release failure.
+## Project Structure
 
-### Version Bumping
+```
+cmd/bd/              # CLI commands (Cobra). Add new commands here.
+internal/
+  types/             # Core data types (Issue, Dependency, etc.)
+  storage/           # Storage interface
+    dolt/            # Dolt database backend (CGO)
+integrations/
+  beads-mcp/         # MCP server for Claude and other AI assistants (Python)
+examples/            # Integration examples
+scripts/             # Build, test, release, and utility scripts
+```
 
-- Use `scripts/update-versions.sh X.Y.Z` for version bumps
-- The script uses version.go as the source of truth for the current version
-- If any file is out of sync (e.g., marketplace.json missed), fix it manually
-  to match current version BEFORE running the bump script
-- Always run `scripts/check-versions.sh` to verify consistency
-- Never reuse a tag that failed CI — bump to the next patch version instead
+## Code Conventions
 
-### Release Workflow (goreleaser)
+- Follow existing patterns in `cmd/bd/` for new CLI commands
+- Add `--json` flag to all commands for programmatic use
+- Use table-driven tests; use `t.TempDir()` to avoid polluting production DB
+- Never create test issues in the production Dolt database
+- Run `golangci-lint run ./...` before committing
+- Update docs when changing CLI behavior
 
-- GoReleaser builds with `--parallelism 1` to avoid zig race conditions
-- Zig 0.14.0 required (0.13.0 has AccessDenied bug)
-- macOS builds need `-lresolv.9` workaround (zig can't find `-lresolv`)
-- Full build takes 10-20 minutes due to serialized cross-compilation
+## Version Management
+
+- Source of truth: `version.go`
+- Bump all version files atomically: `./scripts/update-versions.sh X.Y.Z`
+- Verify consistency: `./scripts/check-versions.sh`
+
+## Fork & PR Workflow
+
+If contributing from a fork:
+- Add the upstream remote: `git remote add upstream https://github.com/steveyegge/beads.git`
+- Base branches on `upstream/main`, not your fork's `main`
+- Keep PRs focused: one issue per PR, clean commit history
+- Run `make test` and `make fmt-check` before opening a PR
+
+## Key Documentation
+
+- **AGENTS.md** / **AGENT_INSTRUCTIONS.md** — detailed AI agent workflows
+- **CONTRIBUTING.md** — development setup and guidelines
+- **README.md** — user-facing documentation
+- **.github/copilot-instructions.md** — GitHub Copilot-specific guidance
