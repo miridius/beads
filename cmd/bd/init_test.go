@@ -1397,6 +1397,8 @@ func TestInitBEADS_DIR(t *testing.T) {
 // creates the database at BEADS_DIR when the environment variable is set.
 // This tests requirements FR-002 for Dolt backend.
 func TestInit_WithBEADS_DIR_DoltBackend(t *testing.T) {
+	skipIfNoDolt(t)
+
 	// Skip on Windows
 	if runtime.GOOS == "windows" {
 		t.Skip("Skipping BEADS_DIR Dolt test on Windows")

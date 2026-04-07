@@ -43,14 +43,14 @@ func TestIsOrchestratorRoot_FalseWhenMarkersMissing(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			root := t.TempDir()
-			if err := os.MkdirAll(filepath.Join(root, "mayor"), 0750); err != nil {
-				t.Fatal(err)
-			}
 			if err := os.MkdirAll(filepath.Join(root, ".beads"), 0750); err != nil {
 				t.Fatal(err)
 			}
 
 			if tc.setupTown {
+				if err := os.MkdirAll(filepath.Join(root, "mayor"), 0750); err != nil {
+					t.Fatal(err)
+				}
 				if err := os.WriteFile(filepath.Join(root, "mayor", "town.json"), []byte(`{"name":"gt"}`), 0600); err != nil {
 					t.Fatal(err)
 				}

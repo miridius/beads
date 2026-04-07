@@ -269,6 +269,10 @@ func TestDoltServerMode(t *testing.T) {
 	})
 
 	t.Run("GetDoltServerPort", func(t *testing.T) {
+		// Clear env vars so config values are tested, not env overrides.
+		t.Setenv("BEADS_DOLT_SERVER_PORT", "")
+		t.Setenv("BEADS_DOLT_PORT", "")
+
 		tests := []struct {
 			name string
 			cfg  *Config
@@ -430,6 +434,10 @@ func TestGetCapabilities(t *testing.T) {
 
 // TestDoltServerModeRoundtrip tests that server mode config survives save/load
 func TestDoltServerModeRoundtrip(t *testing.T) {
+	// Clear env vars so config values are tested, not env overrides.
+	t.Setenv("BEADS_DOLT_SERVER_PORT", "")
+	t.Setenv("BEADS_DOLT_PORT", "")
+
 	tmpDir := t.TempDir()
 	beadsDir := filepath.Join(tmpDir, ".beads")
 	if err := os.MkdirAll(beadsDir, 0750); err != nil {
@@ -491,6 +499,7 @@ func TestEnvVarOverrides(t *testing.T) {
 
 	t.Run("invalid port env var falls through to config", func(t *testing.T) {
 		t.Setenv("BEADS_DOLT_SERVER_PORT", "not-a-number")
+		t.Setenv("BEADS_DOLT_PORT", "") // Clear legacy fallback so config value is used
 		cfg := &Config{DoltServerPort: 3308}
 		if got := cfg.GetDoltServerPort(); got != 3308 {
 			t.Errorf("GetDoltServerPort() = %d, want 3308", got)

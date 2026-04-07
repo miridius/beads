@@ -140,13 +140,21 @@ func startFakeDoltSQLServer(t *testing.T) int {
 	})
 
 	pid := cmd.Process.Pid
+	pidStr := strconv.Itoa(pid)
 	deadline := time.Now().Add(2 * time.Second)
 	for time.Now().Before(deadline) {
-		out, err := exec.Command("ps", "-p", strconv.Itoa(pid), "-o", "command=").Output()
+		out, err := exec.Command("ps", "-p", pidStr, "-o", "command=").Output()
 		if err == nil {
 			cmdline := strings.TrimSpace(string(out))
 			if strings.Contains(cmdline, "dolt") && strings.Contains(cmdline, "sql-server") {
-				return pid
+				// Also verify pgrep can discover this PID, since isDoltProcess
+				// relies on pgrep. Environments with security sandboxes may
+				// block exec -a renaming, causing ps to show the name but
+				// pgrep to miss it.
+				pgrepOut, pgrepErr := exec.Command("pgrep", "-f", "dolt sql-server").Output()
+				if pgrepErr == nil && strings.Contains(string(pgrepOut), pidStr) {
+					return pid
+				}
 			}
 		}
 		time.Sleep(50 * time.Millisecond)
