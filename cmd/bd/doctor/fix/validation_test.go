@@ -10,25 +10,21 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strconv"
 	"testing"
 	"time"
 
 	"github.com/steveyegge/beads/internal/configfile"
 	"github.com/steveyegge/beads/internal/storage/dolt"
+	"github.com/steveyegge/beads/internal/testutil"
 	"github.com/steveyegge/beads/internal/types"
 )
 
 // fixTestServerPort returns the Dolt server port for fix tests.
-// Returns 0 when BEADS_DOLT_PORT is unset so callers fail safely
-// instead of accidentally connecting to a production server on 3307.
+// Uses testutil.DoltContainerPortInt() to detect a real test container,
+// rather than reading BEADS_DOLT_PORT which may point to a production
+// server (e.g., when set by the orchestrator's beads module).
 func fixTestServerPort() int {
-	if p := os.Getenv("BEADS_DOLT_PORT"); p != "" {
-		if port, _ := strconv.Atoi(p); port > 0 {
-			return port
-		}
-	}
-	return 0
+	return testutil.DoltContainerPortInt()
 }
 
 // newFixTestStore creates a DoltStore for fix package tests with proper
